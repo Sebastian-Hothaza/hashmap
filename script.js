@@ -6,42 +6,68 @@ export { hashmapFactory }
 // Function
 const hashmapFactory = () => {
     let map = [];
-    let buckets = 16;
+    let capacity = 16;
+    let loadFactor = 0.75;
 
     // Returns a hash of the value
     function hash(string){
         let value = 0;
-        const primeNumber = 17;
+        const primeNumber = 1; // Note: Set to 1 for demo purposes. We want to encourage collisions; normally want to avoid.
         for (let i=0; i<string.length; i++){
             value = primeNumber*value + string.charCodeAt(i);
         }
-        return value%buckets;
+        return value%capacity;
     }
 
-    // takes two arguments, the first is a key and the second is a value that is assigned to this key.
-    // If a key already exists, then the old value is overwritten.
+    // Adding to hashmap
     // TODO: Bucket size growth
     function set(key, value){
-        map[hash(key)] = value;
+        if (map[hash(key)]){ // Bucket non-empty
+            if (has(key)){ //Replace existing
+                let node = map[hash(key)].getHead();
+                if (node.key === key) node.value = value 
+                while (node.next){
+                    node = node.next
+                    if (node.key === key) node.value = value 
+                }
+            }else{ //new entry - use linked list to avoid collisions
+                map[hash(key)].append(key,value);
+            }
+        } else { //Item is first item in bucket. Create linked list, attach to map
+            const newList = linkedListFactory();
+            newList.append(key, value);
+            map[hash(key)] = newList;
+        }
     }
 
     // Returns the value that is assigned to this key. If key is not found, return null
     function get(key){
-        if(!has(key)) return null;
-        return map[hash(key)];
+
+        if (map[hash(key)]){
+            let node = map[hash(key)].getHead();
+            if (node.key === key) return node.value;
+            while (node.next){
+                node = node.next;
+                if (node.key === key) return node.value;
+                
+            }
+        }
+        return null;
     }
 
     // Returns true or false based on whether or not the key is in the hash map
     function has(key){
-        if (map[hash(key)]){
-            return true;
+        let node = map[hash(key)].getHead();
+        if (node.key === key) return true;
+        while (node.next){
+            node = node.next;
+            if (node.key === key) return true;
         }
         return false;
     }
     // If the given key is in the hash map, it should remove the entry with that key and return true.
     function remove(key){
-        if(!has(key)) return false;     // If the key isn’t in the hash map, it should return false.
-        map[hash(key)] = null;
+        
     }
 
     //returns the number of stored keys in the hash map.
@@ -60,22 +86,56 @@ const hashmapFactory = () => {
 
     // returns an array containing all the keys inside the hash map.
     function keys(){
-
+        let result = [];
+        for(let i=0; i<map.length; i++){
+            if (map[i]){ // linked list exists at index
+                let node = map[i].getHead();
+                result.push(node.key);
+                while (node.next){
+                    node = node.next;
+                    result.push(node.key);
+                }
+            }
+        }
+        return result;
     }
 
     // returns an array containing all the values.
     function values(){
-
+        let result = [];
+        for(let i=0; i<map.length; i++){
+            if (map[i]){ // linked list exists at index
+                let node = map[i].getHead();
+                result.push(node.value);
+                while (node.next){
+                    node = node.next;
+                    result.push(node.value);
+                }
+            }
+        }
+        return result;
     }
 
     //eturns an array that contains each key, value pair.
     //Example: [[firstKey, firstValue], [secondKey, secondValue]]
     function entries(){
+        let result = []
+
+        for(let i=0; i<map.length; i++){
+            if (map[i]){ // linked list exists at index
+                let node = map[i].getHead();
+                result.push([node.key, node.value]);
+                while (node.next){
+                    node = node.next;
+                    result.push([node.key, node.value]);
+                }
+            }
+        }
+
+        return result;
 
     }
 
-
-    // TODO: Verify what needs to truly be exposed here
     return{
         set, get, has, remove, length, clear, keys, values, entries
     }
