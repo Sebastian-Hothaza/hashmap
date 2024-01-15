@@ -1,0 +1,6 @@
+export { linkedListFactory }
+
+
+const linkedListFactory = () => {
+
+};
